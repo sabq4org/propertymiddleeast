@@ -15,16 +15,17 @@ import {
   Undo2,
   ChevronDown,
   ChevronUp,
-  Filter,
   X,
   LayoutDashboard,
   ListTodo,
   TrendingUp,
-  ChevronLeft,
   MessageSquareText,
   ArrowRight,
   RefreshCw,
   Send,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -76,6 +77,9 @@ interface Stats {
 }
 
 /* ─── Config ─── */
+const ADMIN_PASSWORD = "PME@2026!admin";
+const AUTH_STORAGE_KEY = "pme_admin_auth";
+
 const statusConfig: Record<TaskStatus, { label: string; color: string; bg: string; icon: typeof Clock }> = {
   pending: { label: "قيد الانتظار", color: "#64748b", bg: "#f1f5f9", icon: Clock },
   in_progress: { label: "قيد التنفيذ", color: "#2563eb", bg: "#eff6ff", icon: Loader2 },
@@ -279,9 +283,140 @@ function SelectDropdown({
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   LOGIN SCREEN
+   ═══════════════════════════════════════════════════════════════ */
+function AdminLoginScreen({ onLogin }: { onLogin: () => void }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      try { sessionStorage.setItem(AUTH_STORAGE_KEY, "true"); } catch {}
+      onLogin();
+    } else {
+      setError(true);
+      setTimeout(() => setError(false), 2000);
+    }
+  };
+
+  return (
+    <div style={{
+      position: "fixed",
+      inset: 0,
+      zIndex: 9999,
+      background: "linear-gradient(135deg, #1a365d 0%, #2d4a7c 50%, #1a365d 100%)",
+      display: "grid",
+      placeItems: "center",
+      padding: 20,
+    }}>
+      <div style={{
+        background: "#fff",
+        borderRadius: 24,
+        padding: "48px 40px",
+        maxWidth: 420,
+        width: "100%",
+        boxShadow: "0 25px 60px rgba(0,0,0,0.3)",
+        textAlign: "center",
+      }}>
+        <div style={{
+          width: 64,
+          height: 64,
+          borderRadius: 16,
+          background: "linear-gradient(135deg, #1a365d, #2d4a7c)",
+          display: "grid",
+          placeItems: "center",
+          margin: "0 auto 20px",
+        }}>
+          <Lock size={28} color="#fff" />
+        </div>
+        <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: "#1a365d" }}>منطقة محمية</h2>
+        <p style={{ margin: "0 0 28px", fontSize: 14, color: "#64748b" }}>أدخل كلمة المرور للوصول إلى إدارة المهام</p>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ position: "relative", marginBottom: 16 }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="كلمة المرور"
+              autoFocus
+              style={{
+                width: "100%",
+                padding: "14px 48px 14px 16px",
+                borderRadius: 12,
+                border: `2px solid ${error ? "#dc2626" : "#e2e8f0"}`,
+                fontSize: 15,
+                outline: "none",
+                textAlign: "center",
+                fontFamily: "inherit",
+                transition: "border-color 200ms",
+                boxSizing: "border-box",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                left: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                color: "#94a3b8",
+                padding: 4,
+              }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          {error && (
+            <p style={{ color: "#dc2626", fontSize: 13, margin: "0 0 12px", fontWeight: 600 }}>
+              كلمة المرور غير صحيحة
+            </p>
+          )}
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              padding: "14px",
+              borderRadius: 12,
+              border: "none",
+              background: "linear-gradient(135deg, #1a365d, #2d4a7c)",
+              color: "#fff",
+              fontSize: 15,
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "opacity 200ms",
+            }}
+          >
+            دخول
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    MAIN PAGE COMPONENT
    ═══════════════════════════════════════════════════════════════ */
 export default function TasksPage() {
+  /* ─── Auth State ─── */
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLoginScreen, setShowLoginScreen] = useState(false);
+
+  // Check session on mount
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
+      if (stored === "true") setIsAdmin(true);
+    } catch {}
+  }, []);
+
   /* ─── State ─── */
   const [view, setView] = useState<"dashboard" | "tasks" | "detail">("dashboard");
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -315,7 +450,7 @@ export default function TasksPage() {
       setTasks(Array.isArray(tasksData) ? tasksData : []);
       setStats(statsData);
       setSections(sectionsData);
-    } catch (e) {
+    } catch {
       showToast("حدث خطأ في تحميل البيانات", "error");
     }
     setLoading(false);
@@ -325,6 +460,21 @@ export default function TasksPage() {
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
+  };
+
+  /* ─── Navigation with Auth Check ─── */
+  const handleNavToTasks = () => {
+    if (isAdmin) {
+      setView("tasks");
+    } else {
+      setShowLoginScreen(true);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    setIsAdmin(true);
+    setShowLoginScreen(false);
+    setView("tasks");
   };
 
   /* ─── Actions ─── */
@@ -452,6 +602,11 @@ export default function TasksPage() {
      ═══════════════════════════════════════════════════════════ */
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
+      {/* Login Screen Overlay */}
+      {showLoginScreen && (
+        <AdminLoginScreen onLogin={handleAdminLogin} />
+      )}
+
       {/* Toast */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
@@ -484,10 +639,11 @@ export default function TasksPage() {
             label="لوحة المتابعة"
           />
           <NavButton
-            active={view === "tasks"}
-            onClick={() => setView("tasks")}
+            active={view === "tasks" || view === "detail"}
+            onClick={handleNavToTasks}
             icon={<ListTodo size={16} />}
             label="المهام"
+            locked={!isAdmin}
           />
         </div>
         <Link
@@ -520,31 +676,47 @@ export default function TasksPage() {
             </div>
           </div>
         ) : tasks.length === 0 ? (
-          <div style={{ display: "grid", placeItems: "center", minHeight: 400 }}>
-            <div style={{ textAlign: "center" }}>
-              <ListTodo size={48} style={{ color: "var(--color-muted)", marginBottom: 16 }} />
-              <h2 style={{ color: "var(--color-text)", marginBottom: 8 }}>لا توجد مهام بعد</h2>
-              <p style={{ color: "var(--color-muted)", marginBottom: 24 }}>اضغط الزر أدناه لإدخال المهام من بيانات الخدمات</p>
-              <button
-                onClick={handleSeed}
-                style={{
-                  padding: "12px 32px",
-                  borderRadius: 12,
-                  border: "none",
-                  background: "var(--color-primary)",
-                  color: "#fff",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                إدخال المهام
-              </button>
+          isAdmin ? (
+            <div style={{ display: "grid", placeItems: "center", minHeight: 400 }}>
+              <div style={{ textAlign: "center" }}>
+                <ListTodo size={48} style={{ color: "var(--color-muted)", marginBottom: 16 }} />
+                <h2 style={{ color: "var(--color-text)", marginBottom: 8 }}>لا توجد مهام بعد</h2>
+                <p style={{ color: "var(--color-muted)", marginBottom: 24 }}>اضغط الزر أدناه لإدخال المهام من بيانات الخدمات</p>
+                <button
+                  onClick={handleSeed}
+                  style={{
+                    padding: "12px 32px",
+                    borderRadius: 12,
+                    border: "none",
+                    background: "var(--color-primary)",
+                    color: "#fff",
+                    fontSize: 15,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  إدخال المهام
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div style={{ display: "grid", placeItems: "center", minHeight: 400 }}>
+              <div style={{ textAlign: "center" }}>
+                <Loader2 size={48} style={{ color: "var(--color-muted)", marginBottom: 16 }} />
+                <h2 style={{ color: "var(--color-text)", marginBottom: 8 }}>جاري إعداد المهام</h2>
+                <p style={{ color: "var(--color-muted)" }}>يتم تجهيز المهام حالياً، يرجى المحاولة لاحقاً</p>
+              </div>
+            </div>
+          )
         ) : view === "dashboard" ? (
-          <DashboardView stats={stats} onNavigate={(v) => setView(v as any)} />
-        ) : view === "detail" && selectedTask ? (
+          <DashboardView stats={stats} isAdmin={isAdmin} onNavigate={(v) => {
+            if (v === "tasks" && !isAdmin) {
+              setShowLoginScreen(true);
+            } else {
+              setView(v as "dashboard" | "tasks");
+            }
+          }} />
+        ) : view === "detail" && selectedTask && isAdmin ? (
           <DetailView
             task={selectedTask}
             history={taskHistory}
@@ -557,7 +729,7 @@ export default function TasksPage() {
             onAddNote={handleAddNote}
             onBack={() => setView("tasks")}
           />
-        ) : (
+        ) : isAdmin ? (
           <TasksListView
             tasks={filteredTasks}
             groupedTasks={groupedTasks}
@@ -581,6 +753,8 @@ export default function TasksPage() {
             onUndo={handleUndo}
             onRefresh={loadAll}
           />
+        ) : (
+          <DashboardView stats={stats} isAdmin={false} onNavigate={() => setShowLoginScreen(true)} />
         )}
       </main>
 
@@ -596,7 +770,7 @@ export default function TasksPage() {
 /* ═══════════════════════════════════════════════════════════════
    NAV BUTTON
    ═══════════════════════════════════════════════════════════════ */
-function NavButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+function NavButton({ active, onClick, icon, label, locked }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; locked?: boolean }) {
   return (
     <button
       onClick={onClick}
@@ -617,14 +791,15 @@ function NavButton({ active, onClick, icon, label }: { active: boolean; onClick:
     >
       {icon}
       {label}
+      {locked && <Lock size={12} style={{ opacity: 0.6 }} />}
     </button>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DASHBOARD VIEW
+   DASHBOARD VIEW (PUBLIC)
    ═══════════════════════════════════════════════════════════════ */
-function DashboardView({ stats, onNavigate }: { stats: Stats | null; onNavigate: (v: string) => void }) {
+function DashboardView({ stats, isAdmin, onNavigate }: { stats: Stats | null; isAdmin: boolean; onNavigate: (v: string) => void }) {
   if (!stats) return null;
 
   const statCards = [
@@ -707,10 +882,7 @@ function DashboardView({ stats, onNavigate }: { stats: Stats | null; onNavigate:
 
       {/* Phase Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div
-          onClick={() => onNavigate("tasks")}
-          style={{ padding: 24, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", cursor: "pointer", boxShadow: "var(--shadow-sm)", transition: "all 200ms" }}
-        >
+        <div style={{ padding: 24, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <Rocket size={20} style={{ color: "var(--color-primary)" }} />
             <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>مهام الإطلاق</h3>
@@ -718,10 +890,7 @@ function DashboardView({ stats, onNavigate }: { stats: Stats | null; onNavigate:
           <span style={{ fontSize: 36, fontWeight: 800, color: "var(--color-primary)" }}>{stats.launchTotal}</span>
           <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--color-muted)" }}>مهمة مطلوبة للإطلاق</p>
         </div>
-        <div
-          onClick={() => onNavigate("tasks")}
-          style={{ padding: 24, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", cursor: "pointer", boxShadow: "var(--shadow-sm)", transition: "all 200ms" }}
-        >
+        <div style={{ padding: 24, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <CalendarClock size={20} style={{ color: "var(--color-secondary)" }} />
             <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>مهام ما بعد الإطلاق</h3>
@@ -749,36 +918,38 @@ function DashboardView({ stats, onNavigate }: { stats: Stats | null; onNavigate:
         </div>
       </div>
 
-      {/* Navigate to tasks */}
-      <button
-        onClick={() => onNavigate("tasks")}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          width: "100%",
-          padding: "16px",
-          borderRadius: 14,
-          border: "2px solid var(--color-primary)",
-          background: "transparent",
-          color: "var(--color-primary)",
-          fontSize: 15,
-          fontWeight: 700,
-          cursor: "pointer",
-          transition: "all 200ms",
-        }}
-      >
-        <ListTodo size={18} />
-        عرض جميع المهام
-        <ArrowLeft size={16} />
-      </button>
+      {/* Navigate to tasks - only for admin */}
+      {isAdmin && (
+        <button
+          onClick={() => onNavigate("tasks")}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            width: "100%",
+            padding: "16px",
+            borderRadius: 14,
+            border: "2px solid var(--color-primary)",
+            background: "transparent",
+            color: "var(--color-primary)",
+            fontSize: 15,
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 200ms",
+          }}
+        >
+          <ListTodo size={18} />
+          عرض جميع المهام
+          <ArrowLeft size={16} />
+        </button>
+      )}
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   TASKS LIST VIEW
+   TASKS LIST VIEW (ADMIN ONLY)
    ═══════════════════════════════════════════════════════════════ */
 function TasksListView({
   tasks,
@@ -1115,7 +1286,7 @@ function TaskCard({
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DETAIL VIEW
+   DETAIL VIEW (ADMIN ONLY)
    ═══════════════════════════════════════════════════════════════ */
 function DetailView({
   task,
@@ -1204,7 +1375,6 @@ function DetailView({
       <div style={{ padding: 20, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
         <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700 }}>الإجراءات</h3>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {/* Status buttons */}
           {statusOptions.filter((s) => s !== task.status).map((s) => {
             const cfg = statusConfig[s];
             const Icon = cfg.icon;
@@ -1233,7 +1403,6 @@ function DetailView({
               </button>
             );
           })}
-          {/* Phase toggle */}
           <button
             onClick={() => onUpdatePhase(task.id, nextPhase)}
             disabled={isLoading}
@@ -1255,7 +1424,6 @@ function DetailView({
             <ArrowLeftRight size={14} />
             نقل إلى {phaseConfig[nextPhase].label}
           </button>
-          {/* Undo */}
           <button
             onClick={() => onUndo(task.id)}
             disabled={isLoading}

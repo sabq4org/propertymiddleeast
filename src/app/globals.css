@@ -1,6 +1,6 @@
-@import "tailwindcss";
+/* Tailwind removed for a simpler build path */
 
-@theme inline {
+:root {
   --color-primary: #1a365d;
   --color-primary-light: #f0f4f8;
   --color-secondary: #c9956a;
