@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { query } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,9 +12,7 @@ export async function POST(request: NextRequest) {
       otherNotes,
     } = body;
 
-    const sql = getDb();
-
-    await sql`
+    await query(`
       CREATE TABLE IF NOT EXISTS sabq_submissions (
         id SERIAL PRIMARY KEY,
         submitter_name TEXT NOT NULL,
@@ -24,13 +22,14 @@ export async function POST(request: NextRequest) {
         other_notes TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
-    `;
+    `);
 
-    const result = await sql`
-      INSERT INTO sabq_submissions (submitter_name, selections, launch_suggestions, post_launch_suggestions, other_notes)
-      VALUES (${submitterName}, ${JSON.stringify(selections)}, ${launchSuggestions}, ${postLaunchSuggestions}, ${otherNotes})
-      RETURNING id, created_at
-    `;
+    const result = await query(
+      `INSERT INTO sabq_submissions (submitter_name, selections, launch_suggestions, post_launch_suggestions, other_notes)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, created_at`,
+      [submitterName, JSON.stringify(selections), launchSuggestions, postLaunchSuggestions, otherNotes]
+    );
 
     return NextResponse.json({
       success: true,
@@ -48,9 +47,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const sql = getDb();
-
-    await sql`
+    await query(`
       CREATE TABLE IF NOT EXISTS sabq_submissions (
         id SERIAL PRIMARY KEY,
         submitter_name TEXT NOT NULL,
@@ -60,11 +57,11 @@ export async function GET() {
         other_notes TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
-    `;
+    `);
 
-    const submissions = await sql`
-      SELECT * FROM sabq_submissions ORDER BY created_at DESC
-    `;
+    const submissions = await query(
+      `SELECT * FROM sabq_submissions ORDER BY created_at DESC`
+    );
 
     return NextResponse.json({ success: true, data: submissions });
   } catch (error) {
