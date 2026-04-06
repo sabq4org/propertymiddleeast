@@ -139,6 +139,507 @@ function formatDate(ts: number | string | null) {
   return d.toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+/* ─── Responsive CSS ─── */
+const RESPONSIVE_CSS = `
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes slideUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+
+  /* ─── Header ─── */
+  .tasks-header {
+    background: linear-gradient(135deg, #1a365d 0%, #2d4a7c 50%, #1a365d 100%);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 4px 20px rgba(26,54,93,0.3);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .tasks-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .tasks-header-brand h1 {
+    margin: 0;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .tasks-header-brand p {
+    margin: 0;
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+  }
+  .tasks-header-nav {
+    display: flex;
+    gap: 4px;
+  }
+  .tasks-header-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 200ms;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 200ms;
+    white-space: nowrap;
+  }
+  .nav-btn.active {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-weight: 700;
+  }
+  .nav-btn:not(.active) {
+    background: transparent;
+    color: rgba(255,255,255,0.65);
+    font-weight: 400;
+  }
+
+  /* ─── Main Content ─── */
+  .tasks-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 16px 80px;
+  }
+
+  /* ─── Dashboard ─── */
+  .dash-title h2 { font-size: 24px; font-weight: 800; margin: 0 0 4px; color: var(--color-text); }
+  .dash-title p { color: var(--color-muted); font-size: 13px; margin: 0; }
+  .dash-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .dash-stat-card {
+    padding: 18px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+  .dash-stat-value { font-size: 28px; font-weight: 800; color: var(--color-text); line-height: 1; }
+  .dash-stat-label { font-size: 12px; color: var(--color-muted); text-align: center; }
+  .dash-stat-extra {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 99px;
+  }
+  .dash-progress-card {
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+  .dash-progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .dash-progress-rate { font-size: 28px; font-weight: 800; color: var(--color-primary); }
+  .dash-phase-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .dash-phase-card {
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+  .dash-phase-value { font-size: 28px; font-weight: 800; }
+  .dash-sections-card {
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ─── Filters ─── */
+  .filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    align-items: center;
+  }
+  .filter-search {
+    position: relative;
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+  .filter-search input {
+    width: 100%;
+    padding: 8px 36px 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .filter-select {
+    padding: 8px 12px;
+    padding-left: 28px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    font-size: 12px;
+    color: var(--color-text);
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 10px center;
+    min-width: 0;
+    flex: 0 1 auto;
+    max-width: 100%;
+  }
+
+  /* ─── Task Card ─── */
+  .task-card {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin: 3px 0;
+    border-radius: 10px;
+    transition: all 200ms;
+    cursor: pointer;
+    gap: 10px;
+  }
+  .task-card-status {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 99px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 200ms;
+    border-width: 2px;
+    border-style: solid;
+  }
+  .task-card-title {
+    flex: 1;
+    min-width: 0;
+  }
+  .task-card-title h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .task-card-badges {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .task-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .task-card-actions {
+    flex-shrink: 0;
+  }
+
+  /* ─── Detail View ─── */
+  .detail-card {
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+  .detail-title { font-size: 20px; font-weight: 800; margin: 0 0 10px; }
+  .detail-actions-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .detail-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .detail-note-row {
+    display: flex;
+    gap: 8px;
+  }
+  .detail-note-row textarea {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    font-size: 13px;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+  }
+
+  /* ─── Section Accordion ─── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    background: var(--color-primary-light);
+    cursor: pointer;
+    text-align: right;
+  }
+  .section-header-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+  .section-header-info span:first-child {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .section-count {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: rgba(26,54,93,0.1);
+    padding: 2px 8px;
+    border-radius: 99px;
+    flex-shrink: 0;
+  }
+  .section-tasks-wrap {
+    padding: 6px 8px 8px;
+  }
+
+  /* ─── Login Screen ─── */
+  .login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, #1a365d 0%, #2d4a7c 50%, #1a365d 100%);
+    display: grid;
+    place-items: center;
+    padding: 16px;
+  }
+  .login-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 36px 28px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+    text-align: center;
+  }
+
+  /* ─── Dropdown ─── */
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    min-width: 180px;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  /* ═══════════════════════════════════════
+     MOBILE RESPONSIVE (max-width: 640px)
+     ═══════════════════════════════════════ */
+  @media (max-width: 640px) {
+    .tasks-header {
+      padding: 12px 14px;
+      gap: 8px;
+    }
+    .tasks-header-brand h1 {
+      font-size: 13px;
+    }
+    .tasks-header-brand p {
+      font-size: 10px;
+    }
+    .tasks-header-brand img,
+    .tasks-header-brand .logo-img {
+      width: 28px !important;
+      height: 28px !important;
+    }
+    .nav-btn {
+      padding: 6px 8px;
+      font-size: 11px;
+      gap: 3px;
+    }
+    .tasks-header-link {
+      font-size: 11px;
+      padding: 5px 8px;
+    }
+    .tasks-main {
+      padding: 14px 10px 60px;
+    }
+
+    /* Dashboard */
+    .dash-title h2 { font-size: 20px; }
+    .dash-title p { font-size: 12px; }
+    .dash-stat-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .dash-stat-card {
+      padding: 14px 10px;
+    }
+    .dash-stat-value { font-size: 22px; }
+    .dash-stat-label { font-size: 11px; }
+    .dash-progress-card { padding: 16px; }
+    .dash-progress-rate { font-size: 24px; }
+    .dash-phase-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .dash-phase-card { padding: 14px; }
+    .dash-phase-value { font-size: 22px; }
+    .dash-sections-card { padding: 16px; }
+
+    /* Filters */
+    .filters-bar {
+      padding: 10px;
+      gap: 6px;
+    }
+    .filter-search {
+      flex: 1 1 100%;
+    }
+    .filter-select {
+      flex: 1 1 calc(50% - 4px);
+      font-size: 11px;
+      padding: 7px 10px;
+      padding-left: 24px;
+    }
+
+    /* Task Card */
+    .task-card {
+      padding: 10px 8px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .task-card-title h3 {
+      font-size: 12px;
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .task-card-badges {
+      order: 4;
+      width: 100%;
+      padding-right: 36px;
+    }
+    .task-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+    }
+    .task-card-status {
+      width: 26px;
+      height: 26px;
+    }
+
+    /* Section */
+    .section-header {
+      padding: 12px 12px;
+    }
+    .section-header-info span:first-child {
+      font-size: 13px;
+    }
+    .section-tasks-wrap {
+      padding: 4px 4px 6px;
+    }
+
+    /* Detail */
+    .detail-card { padding: 16px; }
+    .detail-title { font-size: 17px; }
+    .detail-action-btn {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+    .detail-note-row {
+      flex-direction: column;
+    }
+
+    /* Login */
+    .login-card {
+      padding: 28px 20px;
+      border-radius: 16px;
+    }
+  }
+
+  /* ═══════════════════════════════════════
+     TABLET (641px - 768px)
+     ═══════════════════════════════════════ */
+  @media (min-width: 641px) and (max-width: 768px) {
+    .dash-stat-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .dash-stat-value { font-size: 26px; }
+  }
+`;
+
 /* ─── Toast Component ─── */
 function Toast({ message, type, onClose }: { message: string; type: "success" | "error"; onClose: () => void }) {
   useEffect(() => {
@@ -150,24 +651,26 @@ function Toast({ message, type, onClose }: { message: string; type: "success" | 
     <div
       style={{
         position: "fixed",
-        bottom: 24,
+        bottom: 20,
         left: "50%",
         transform: "translateX(-50%)",
         zIndex: 9999,
-        padding: "12px 24px",
+        padding: "10px 20px",
         borderRadius: 12,
         background: type === "success" ? "#059669" : "#dc2626",
         color: "#fff",
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: 600,
         boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
         display: "flex",
         alignItems: "center",
         gap: 8,
         animation: "slideUp 0.3s ease",
+        maxWidth: "90vw",
+        textAlign: "center",
       }}
     >
-      {type === "success" ? <CheckCircle2 size={18} /> : <X size={18} />}
+      {type === "success" ? <CheckCircle2 size={16} /> : <X size={16} />}
       {message}
     </div>
   );
@@ -196,21 +699,7 @@ function DropdownMenu({
     <div ref={ref} style={{ position: "relative" }}>
       <div onClick={() => setOpen(!open)}>{trigger}</div>
       {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            marginTop: 4,
-            background: "#fff",
-            borderRadius: 12,
-            border: "1px solid var(--color-border)",
-            boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-            minWidth: 200,
-            zIndex: 100,
-            overflow: "hidden",
-          }}
-        >
+        <div className="dropdown-menu">
           {items.map((item, i) => (
             <button
               key={i}
@@ -220,10 +709,10 @@ function DropdownMenu({
                 alignItems: "center",
                 gap: 8,
                 width: "100%",
-                padding: "10px 16px",
+                padding: "10px 14px",
                 border: "none",
                 background: "transparent",
-                fontSize: 13,
+                fontSize: 12,
                 color: item.danger ? "#dc2626" : "var(--color-text)",
                 textAlign: "right",
                 transition: "background 150ms",
@@ -257,22 +746,7 @@ function SelectDropdown({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      style={{
-        padding: "8px 14px",
-        borderRadius: 10,
-        border: "1px solid var(--color-border)",
-        background: "#fff",
-        fontSize: 13,
-        color: "var(--color-text)",
-        minWidth: 140,
-        cursor: "pointer",
-        outline: "none",
-        appearance: "none",
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "left 12px center",
-        paddingLeft: 32,
-      }}
+      className="filter-select"
     >
       <option value="all">{placeholder}</option>
       {options.map((o) => (
@@ -302,40 +776,24 @@ function AdminLoginScreen({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <div style={{
-      position: "fixed",
-      inset: 0,
-      zIndex: 9999,
-      background: "linear-gradient(135deg, #1a365d 0%, #2d4a7c 50%, #1a365d 100%)",
-      display: "grid",
-      placeItems: "center",
-      padding: 20,
-    }}>
-      <div style={{
-        background: "#fff",
-        borderRadius: 24,
-        padding: "48px 40px",
-        maxWidth: 420,
-        width: "100%",
-        boxShadow: "0 25px 60px rgba(0,0,0,0.3)",
-        textAlign: "center",
-      }}>
+    <div className="login-overlay">
+      <div className="login-card">
         <div style={{
-          width: 64,
-          height: 64,
-          borderRadius: 16,
+          width: 56,
+          height: 56,
+          borderRadius: 14,
           background: "linear-gradient(135deg, #1a365d, #2d4a7c)",
           display: "grid",
           placeItems: "center",
-          margin: "0 auto 20px",
+          margin: "0 auto 16px",
         }}>
-          <Lock size={28} color="#fff" />
+          <Lock size={24} color="#fff" />
         </div>
-        <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: "#1a365d" }}>منطقة محمية</h2>
-        <p style={{ margin: "0 0 28px", fontSize: 14, color: "#64748b" }}>أدخل كلمة المرور للوصول إلى إدارة المهام</p>
+        <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 800, color: "#1a365d" }}>منطقة محمية</h2>
+        <p style={{ margin: "0 0 24px", fontSize: 13, color: "#64748b" }}>أدخل كلمة المرور للوصول إلى إدارة المهام</p>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ position: "relative", marginBottom: 16 }}>
+          <div style={{ position: "relative", marginBottom: 14 }}>
             <input
               type={showPassword ? "text" : "password"}
               value={password}
@@ -344,10 +802,10 @@ function AdminLoginScreen({ onLogin }: { onLogin: () => void }) {
               autoFocus
               style={{
                 width: "100%",
-                padding: "14px 48px 14px 16px",
-                borderRadius: 12,
+                padding: "12px 44px 12px 14px",
+                borderRadius: 10,
                 border: `2px solid ${error ? "#dc2626" : "#e2e8f0"}`,
-                fontSize: 15,
+                fontSize: 14,
                 outline: "none",
                 textAlign: "center",
                 fontFamily: "inherit",
@@ -360,7 +818,7 @@ function AdminLoginScreen({ onLogin }: { onLogin: () => void }) {
               onClick={() => setShowPassword(!showPassword)}
               style={{
                 position: "absolute",
-                left: 12,
+                left: 10,
                 top: "50%",
                 transform: "translateY(-50%)",
                 border: "none",
@@ -370,11 +828,11 @@ function AdminLoginScreen({ onLogin }: { onLogin: () => void }) {
                 padding: 4,
               }}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
           {error && (
-            <p style={{ color: "#dc2626", fontSize: 13, margin: "0 0 12px", fontWeight: 600 }}>
+            <p style={{ color: "#dc2626", fontSize: 12, margin: "0 0 10px", fontWeight: 600 }}>
               كلمة المرور غير صحيحة
             </p>
           )}
@@ -382,12 +840,12 @@ function AdminLoginScreen({ onLogin }: { onLogin: () => void }) {
             type="submit"
             style={{
               width: "100%",
-              padding: "14px",
-              borderRadius: 12,
+              padding: "12px",
+              borderRadius: 10,
               border: "none",
               background: "linear-gradient(135deg, #1a365d, #2d4a7c)",
               color: "#fff",
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: 700,
               cursor: "pointer",
               transition: "opacity 200ms",
@@ -400,6 +858,7 @@ function AdminLoginScreen({ onLogin }: { onLogin: () => void }) {
     </div>
   );
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    MAIN PAGE COMPONENT
@@ -602,6 +1061,8 @@ export default function TasksPage() {
      ═══════════════════════════════════════════════════════════ */
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
+      <style>{RESPONSIVE_CSS}</style>
+
       {/* Login Screen Overlay */}
       {showLoginScreen && (
         <AdminLoginScreen onLogin={handleAdminLogin} />
@@ -611,86 +1072,62 @@ export default function TasksPage() {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Header */}
-      <header
-        style={{
-          background: "linear-gradient(135deg, #1a365d 0%, #2d4a7c 50%, #1a365d 100%)",
-          padding: "20px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          position: "sticky",
-          top: 0,
-          zIndex: 50,
-          boxShadow: "0 4px 20px rgba(26,54,93,0.3)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Image src="/logo.png" alt="PME" width={36} height={36} style={{ borderRadius: 8 }} />
+      <header className="tasks-header">
+        <div className="tasks-header-brand">
+          <Image src="/logo.png" alt="PME" width={32} height={32} className="logo-img" style={{ borderRadius: 8 }} />
           <div>
-            <h1 style={{ margin: 0, color: "#fff", fontSize: 18, fontWeight: 700 }}>Property Middle East</h1>
-            <p style={{ margin: 0, color: "rgba(255,255,255,0.7)", fontSize: 12 }}>لوحة إدارة المهام</p>
+            <h1>Property Middle East</h1>
+            <p>لوحة إدارة المهام</p>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 4 }}>
-          <NavButton
-            active={view === "dashboard"}
+        <div className="tasks-header-nav">
+          <button
+            className={`nav-btn ${view === "dashboard" ? "active" : ""}`}
             onClick={() => setView("dashboard")}
-            icon={<LayoutDashboard size={16} />}
-            label="لوحة المتابعة"
-          />
-          <NavButton
-            active={view === "tasks" || view === "detail"}
+          >
+            <LayoutDashboard size={14} />
+            المتابعة
+          </button>
+          <button
+            className={`nav-btn ${view === "tasks" || view === "detail" ? "active" : ""}`}
             onClick={handleNavToTasks}
-            icon={<ListTodo size={16} />}
-            label="المهام"
-            locked={!isAdmin}
-          />
+          >
+            <ListTodo size={14} />
+            المهام
+            {!isAdmin && <Lock size={10} style={{ opacity: 0.6 }} />}
+          </button>
         </div>
-        <Link
-          href="/"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            color: "rgba(255,255,255,0.8)",
-            fontSize: 13,
-            textDecoration: "none",
-            padding: "6px 14px",
-            borderRadius: 8,
-            border: "1px solid rgba(255,255,255,0.2)",
-            transition: "all 200ms",
-          }}
-        >
+        <Link href="/" className="tasks-header-link">
           خارطة الخدمات
-          <ArrowLeft size={14} />
+          <ArrowLeft size={12} />
         </Link>
       </header>
 
       {/* Main Content */}
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 20px 80px" }}>
+      <main className="tasks-main">
         {loading && tasks.length === 0 ? (
-          <div style={{ display: "grid", placeItems: "center", minHeight: 400 }}>
+          <div style={{ display: "grid", placeItems: "center", minHeight: 300 }}>
             <div style={{ textAlign: "center" }}>
-              <Loader2 size={40} style={{ animation: "spin 1s linear infinite", color: "var(--color-primary)" }} />
-              <p style={{ marginTop: 16, color: "var(--color-muted)" }}>جاري تحميل المهام...</p>
+              <Loader2 size={36} style={{ animation: "spin 1s linear infinite", color: "var(--color-primary)" }} />
+              <p style={{ marginTop: 14, color: "var(--color-muted)", fontSize: 14 }}>جاري تحميل المهام...</p>
             </div>
           </div>
         ) : tasks.length === 0 ? (
           isAdmin ? (
-            <div style={{ display: "grid", placeItems: "center", minHeight: 400 }}>
+            <div style={{ display: "grid", placeItems: "center", minHeight: 300 }}>
               <div style={{ textAlign: "center" }}>
-                <ListTodo size={48} style={{ color: "var(--color-muted)", marginBottom: 16 }} />
-                <h2 style={{ color: "var(--color-text)", marginBottom: 8 }}>لا توجد مهام بعد</h2>
-                <p style={{ color: "var(--color-muted)", marginBottom: 24 }}>اضغط الزر أدناه لإدخال المهام من بيانات الخدمات</p>
+                <ListTodo size={40} style={{ color: "var(--color-muted)", marginBottom: 14 }} />
+                <h2 style={{ color: "var(--color-text)", marginBottom: 8, fontSize: 18 }}>لا توجد مهام بعد</h2>
+                <p style={{ color: "var(--color-muted)", marginBottom: 20, fontSize: 13 }}>اضغط الزر أدناه لإدخال المهام</p>
                 <button
                   onClick={handleSeed}
                   style={{
-                    padding: "12px 32px",
-                    borderRadius: 12,
+                    padding: "10px 28px",
+                    borderRadius: 10,
                     border: "none",
                     background: "var(--color-primary)",
                     color: "#fff",
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: 600,
                     cursor: "pointer",
                   }}
@@ -700,11 +1137,11 @@ export default function TasksPage() {
               </div>
             </div>
           ) : (
-            <div style={{ display: "grid", placeItems: "center", minHeight: 400 }}>
+            <div style={{ display: "grid", placeItems: "center", minHeight: 300 }}>
               <div style={{ textAlign: "center" }}>
-                <Loader2 size={48} style={{ color: "var(--color-muted)", marginBottom: 16 }} />
-                <h2 style={{ color: "var(--color-text)", marginBottom: 8 }}>جاري إعداد المهام</h2>
-                <p style={{ color: "var(--color-muted)" }}>يتم تجهيز المهام حالياً، يرجى المحاولة لاحقاً</p>
+                <Loader2 size={40} style={{ color: "var(--color-muted)", marginBottom: 14 }} />
+                <h2 style={{ color: "var(--color-text)", marginBottom: 8, fontSize: 18 }}>جاري إعداد المهام</h2>
+                <p style={{ color: "var(--color-muted)", fontSize: 13 }}>يتم تجهيز المهام حالياً، يرجى المحاولة لاحقاً</p>
               </div>
             </div>
           )
@@ -757,44 +1194,10 @@ export default function TasksPage() {
           <DashboardView stats={stats} isAdmin={false} onNavigate={() => setShowLoginScreen(true)} />
         )}
       </main>
-
-      {/* Keyframes */}
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes slideUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-      `}</style>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   NAV BUTTON
-   ═══════════════════════════════════════════════════════════════ */
-function NavButton({ active, onClick, icon, label, locked }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; locked?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "8px 16px",
-        borderRadius: 10,
-        border: "none",
-        background: active ? "rgba(255,255,255,0.2)" : "transparent",
-        color: active ? "#fff" : "rgba(255,255,255,0.65)",
-        fontSize: 13,
-        fontWeight: active ? 700 : 400,
-        cursor: "pointer",
-        transition: "all 200ms",
-      }}
-    >
-      {icon}
-      {label}
-      {locked && <Lock size={12} style={{ opacity: 0.6 }} />}
-    </button>
-  );
-}
 
 /* ═══════════════════════════════════════════════════════════════
    DASHBOARD VIEW (PUBLIC)
@@ -803,63 +1206,49 @@ function DashboardView({ stats, isAdmin, onNavigate }: { stats: Stats | null; is
   if (!stats) return null;
 
   const statCards = [
-    { label: "إجمالي المهام", value: stats.total, color: "#1a365d", bg: "#f0f4f8", icon: <ListTodo size={22} /> },
-    { label: "منجزة", value: stats.completed, color: "#059669", bg: "#ecfdf5", icon: <CheckCircle2 size={22} />, extra: `${stats.completionRate}%` },
-    { label: "قيد التنفيذ", value: stats.inProgress, color: "#2563eb", bg: "#eff6ff", icon: <Loader2 size={22} /> },
-    { label: "مؤجلة", value: stats.deferred, color: "#d97706", bg: "#fffbeb", icon: <CalendarClock size={22} /> },
+    { label: "إجمالي المهام", value: stats.total, color: "#1a365d", bg: "#f0f4f8", icon: <ListTodo size={20} /> },
+    { label: "منجزة", value: stats.completed, color: "#059669", bg: "#ecfdf5", icon: <CheckCircle2 size={20} />, extra: `${stats.completionRate}%` },
+    { label: "قيد التنفيذ", value: stats.inProgress, color: "#2563eb", bg: "#eff6ff", icon: <Loader2 size={20} /> },
+    { label: "مؤجلة", value: stats.deferred, color: "#d97706", bg: "#fffbeb", icon: <CalendarClock size={20} /> },
   ];
 
   return (
-    <div style={{ display: "grid", gap: 24 }}>
+    <div style={{ display: "grid", gap: 16 }}>
       {/* Title */}
-      <div style={{ textAlign: "center", marginBottom: 8 }}>
-        <h2 style={{ fontSize: 28, fontWeight: 800, color: "var(--color-text)", margin: "0 0 4px" }}>لوحة المتابعة</h2>
-        <p style={{ color: "var(--color-muted)", fontSize: 14 }}>تتبع تقدم مهام إطلاق منصة Property Middle East</p>
+      <div className="dash-title" style={{ textAlign: "center", marginBottom: 4 }}>
+        <h2>لوحة المتابعة</h2>
+        <p>تتبع تقدم مهام إطلاق منصة Property Middle East</p>
       </div>
 
       {/* Stat Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+      <div className="dash-stat-grid">
         {statCards.map((card, i) => (
-          <div
-            key={i}
-            style={{
-              padding: "24px 20px",
-              borderRadius: 16,
-              border: "1px solid var(--color-border)",
-              background: "#fff",
-              boxShadow: "var(--shadow-sm)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 8,
-              position: "relative",
-            }}
-          >
+          <div key={i} className="dash-stat-card">
             {card.extra && (
-              <span style={{ position: "absolute", top: 12, left: 12, fontSize: 11, fontWeight: 700, color: card.color, background: card.bg, padding: "2px 8px", borderRadius: 99 }}>
+              <span className="dash-stat-extra" style={{ color: card.color, background: card.bg }}>
                 {card.extra}
               </span>
             )}
             <span style={{ color: card.color }}>{card.icon}</span>
-            <span style={{ fontSize: 36, fontWeight: 800, color: "var(--color-text)", lineHeight: 1 }}>{card.value}</span>
-            <span style={{ fontSize: 13, color: "var(--color-muted)" }}>{card.label}</span>
+            <span className="dash-stat-value">{card.value}</span>
+            <span className="dash-stat-label">{card.label}</span>
           </div>
         ))}
       </div>
 
       {/* Progress Bar */}
-      <div style={{ padding: 28, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+      <div className="dash-progress-card">
+        <div className="dash-progress-header">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <TrendingUp size={20} style={{ color: "var(--color-primary)" }} />
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>نسبة الإنجاز الكلية</h3>
+            <TrendingUp size={18} style={{ color: "var(--color-primary)" }} />
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>نسبة الإنجاز الكلية</h3>
           </div>
-          <span style={{ fontSize: 32, fontWeight: 800, color: "var(--color-primary)" }}>{stats.completionRate}%</span>
+          <span className="dash-progress-rate">{stats.completionRate}%</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ fontSize: 13, color: "var(--color-muted)" }}>{stats.completed} من {stats.total} مهمة</span>
+          <span style={{ fontSize: 12, color: "var(--color-muted)" }}>{stats.completed} من {stats.total} مهمة</span>
         </div>
-        <div style={{ height: 12, borderRadius: 99, background: "#e2e8f0", overflow: "hidden" }}>
+        <div style={{ height: 10, borderRadius: 99, background: "#e2e8f0", overflow: "hidden" }}>
           <div
             style={{
               height: "100%",
@@ -870,47 +1259,47 @@ function DashboardView({ stats, isAdmin, onNavigate }: { stats: Stats | null; is
             }}
           />
         </div>
-        <div style={{ display: "flex", gap: 24, marginTop: 16, fontSize: 13, color: "var(--color-muted)" }}>
+        <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 12, color: "var(--color-muted)", flexWrap: "wrap" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <Rocket size={14} /> مع الإطلاق: {stats.launchTotal}
+            <Rocket size={13} /> مع الإطلاق: {stats.launchTotal}
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <CalendarClock size={14} /> بعد الإطلاق: {stats.postLaunchTotal}
+            <CalendarClock size={13} /> بعد الإطلاق: {stats.postLaunchTotal}
           </span>
         </div>
       </div>
 
       {/* Phase Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div style={{ padding: 24, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <Rocket size={20} style={{ color: "var(--color-primary)" }} />
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>مهام الإطلاق</h3>
+      <div className="dash-phase-grid">
+        <div className="dash-phase-card">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <Rocket size={18} style={{ color: "var(--color-primary)" }} />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>مهام الإطلاق</h3>
           </div>
-          <span style={{ fontSize: 36, fontWeight: 800, color: "var(--color-primary)" }}>{stats.launchTotal}</span>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--color-muted)" }}>مهمة مطلوبة للإطلاق</p>
+          <span className="dash-phase-value" style={{ color: "var(--color-primary)" }}>{stats.launchTotal}</span>
+          <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--color-muted)" }}>مهمة مطلوبة للإطلاق</p>
         </div>
-        <div style={{ padding: 24, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <CalendarClock size={20} style={{ color: "var(--color-secondary)" }} />
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>مهام ما بعد الإطلاق</h3>
+        <div className="dash-phase-card">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <CalendarClock size={18} style={{ color: "var(--color-secondary)" }} />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>مهام ما بعد الإطلاق</h3>
           </div>
-          <span style={{ fontSize: 36, fontWeight: 800, color: "var(--color-secondary)" }}>{stats.postLaunchTotal}</span>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--color-muted)" }}>مهمة مؤجلة لما بعد الإطلاق</p>
+          <span className="dash-phase-value" style={{ color: "var(--color-secondary)" }}>{stats.postLaunchTotal}</span>
+          <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--color-muted)" }}>مهمة مؤجلة لما بعد الإطلاق</p>
         </div>
       </div>
 
       {/* Section Stats */}
-      <div style={{ padding: 28, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
-        <h3 style={{ margin: "0 0 20px", fontSize: 16, fontWeight: 700 }}>تقدم الأقسام</h3>
-        <div style={{ display: "grid", gap: 16 }}>
+      <div className="dash-sections-card">
+        <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700 }}>تقدم الأقسام</h3>
+        <div style={{ display: "grid", gap: 14 }}>
           {stats.sections.map((sec, i) => (
             <div key={i}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 12 }}>
                 <span style={{ fontWeight: 600, color: "var(--color-text)" }}>{sec.name}</span>
                 <span style={{ color: "var(--color-muted)" }}>{sec.completed}/{sec.total} ({sec.completionRate}%)</span>
               </div>
-              <div style={{ height: 8, borderRadius: 99, background: "#e2e8f0", overflow: "hidden" }}>
+              <div style={{ height: 7, borderRadius: 99, background: "#e2e8f0", overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${sec.completionRate}%`, borderRadius: 99, background: "linear-gradient(90deg, #1a365d, #2d4a7c)", transition: "width 0.6s ease" }} />
               </div>
             </div>
@@ -928,25 +1317,26 @@ function DashboardView({ stats, isAdmin, onNavigate }: { stats: Stats | null; is
             justifyContent: "center",
             gap: 8,
             width: "100%",
-            padding: "16px",
-            borderRadius: 14,
+            padding: "14px",
+            borderRadius: 12,
             border: "2px solid var(--color-primary)",
             background: "transparent",
             color: "var(--color-primary)",
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: 700,
             cursor: "pointer",
             transition: "all 200ms",
           }}
         >
-          <ListTodo size={18} />
+          <ListTodo size={16} />
           عرض جميع المهام
-          <ArrowLeft size={16} />
+          <ArrowLeft size={14} />
         </button>
       )}
     </div>
   );
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    TASKS LIST VIEW (ADMIN ONLY)
@@ -997,61 +1387,42 @@ function TasksListView({
   onRefresh: () => void;
 }) {
   return (
-    <div style={{ display: "grid", gap: 20 }}>
+    <div style={{ display: "grid", gap: 16 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>المهام</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-muted)" }}>{tasks.length} مهمة</p>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>المهام</h2>
+          <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--color-muted)" }}>{tasks.length} مهمة</p>
         </div>
         <button
           onClick={onRefresh}
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 6,
-            padding: "8px 16px",
+            gap: 5,
+            padding: "7px 14px",
             borderRadius: 10,
             border: "1px solid var(--color-border)",
             background: "#fff",
             color: "var(--color-text)",
-            fontSize: 13,
+            fontSize: 12,
             cursor: "pointer",
           }}
         >
-          <RefreshCw size={14} />
+          <RefreshCw size={13} />
           تحديث
         </button>
       </div>
 
       {/* Filters */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 12,
-          padding: 16,
-          borderRadius: 14,
-          border: "1px solid var(--color-border)",
-          background: "#fff",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ position: "relative", flex: "1 1 200px" }}>
-          <Search size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "var(--color-muted)" }} />
+      <div className="filters-bar">
+        <div className="filter-search">
+          <Search size={14} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--color-muted)" }} />
           <input
             type="text"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="ابحث في المهام..."
-            style={{
-              width: "100%",
-              padding: "8px 40px 8px 14px",
-              borderRadius: 10,
-              border: "1px solid var(--color-border)",
-              fontSize: 13,
-              outline: "none",
-            }}
           />
         </div>
         <SelectDropdown
@@ -1079,16 +1450,16 @@ function TasksListView({
               display: "flex",
               alignItems: "center",
               gap: 4,
-              padding: "8px 14px",
+              padding: "7px 12px",
               borderRadius: 10,
               border: "1px solid #fecaca",
               background: "#fef2f2",
               color: "#dc2626",
-              fontSize: 12,
+              fontSize: 11,
               cursor: "pointer",
             }}
           >
-            <X size={14} />
+            <X size={12} />
             مسح الفلاتر
           </button>
         )}
@@ -1096,44 +1467,25 @@ function TasksListView({
 
       {/* Task Groups */}
       {Object.keys(groupedTasks).length === 0 ? (
-        <div style={{ textAlign: "center", padding: 60, color: "var(--color-muted)" }}>
-          <Search size={40} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <p>لا توجد مهام مطابقة للفلاتر المحددة</p>
+        <div style={{ textAlign: "center", padding: 40, color: "var(--color-muted)" }}>
+          <Search size={32} style={{ marginBottom: 10, opacity: 0.5 }} />
+          <p style={{ fontSize: 13 }}>لا توجد مهام مطابقة للفلاتر المحددة</p>
         </div>
       ) : (
         Object.entries(groupedTasks).map(([section, sectionTasks]) => (
-          <div key={section} style={{ borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
+          <div key={section} style={{ borderRadius: 14, border: "1px solid var(--color-border)", background: "#fff", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
             <button
               onClick={() => onToggleSection(section)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                padding: "16px 20px",
-                border: "none",
-                background: "var(--color-primary-light)",
-                cursor: "pointer",
-                textAlign: "right",
-              }}
+              className="section-header"
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: "var(--color-primary)" }}>{section}</span>
-                <span style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--color-primary)",
-                  background: "rgba(26,54,93,0.1)",
-                  padding: "2px 10px",
-                  borderRadius: 99,
-                }}>
-                  {sectionTasks.length}
-                </span>
+              <div className="section-header-info">
+                <span>{section}</span>
+                <span className="section-count">{sectionTasks.length}</span>
               </div>
-              {expandedSections.has(section) ? <ChevronUp size={18} style={{ color: "var(--color-primary)" }} /> : <ChevronDown size={18} style={{ color: "var(--color-primary)" }} />}
+              {expandedSections.has(section) ? <ChevronUp size={16} style={{ color: "var(--color-primary)", flexShrink: 0 }} /> : <ChevronDown size={16} style={{ color: "var(--color-primary)", flexShrink: 0 }} />}
             </button>
             {expandedSections.has(section) && (
-              <div style={{ padding: "8px 12px 12px" }}>
+              <div className="section-tasks-wrap">
                 {sectionTasks.map((task) => (
                   <TaskCard
                     key={task.id}
@@ -1181,19 +1533,11 @@ function TaskCard({
 
   return (
     <div
+      className="task-card"
       style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "14px 16px",
-        margin: "4px 0",
-        borderRadius: 12,
         border: `1px solid ${task.status === "completed" ? "#bbf7d0" : "transparent"}`,
         background: task.status === "completed" ? "#f0fdf4" : "#fafbfc",
-        transition: "all 200ms",
         opacity: isLoading ? 0.6 : 1,
-        cursor: "pointer",
-        gap: 12,
       }}
       onClick={() => onOpenDetail(task)}
     >
@@ -1205,31 +1549,20 @@ function TaskCard({
           onUpdateStatus(task.id, nextStatus);
         }}
         title="تغيير الحالة"
+        className="task-card-status"
         style={{
-          flexShrink: 0,
-          width: 32,
-          height: 32,
-          borderRadius: 99,
-          border: `2px solid ${sc.color}`,
+          borderColor: sc.color,
           background: task.status === "completed" ? sc.color : "transparent",
           color: task.status === "completed" ? "#fff" : sc.color,
-          display: "grid",
-          placeItems: "center",
-          cursor: "pointer",
-          transition: "all 200ms",
         }}
       >
-        {isLoading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <StatusIcon size={14} />}
+        {isLoading ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <StatusIcon size={12} />}
       </button>
 
       {/* Title */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="task-card-title">
         <h3
           style={{
-            margin: 0,
-            fontSize: 14,
-            fontWeight: 600,
-            color: "var(--color-text)",
             textDecoration: task.status === "completed" ? "line-through" : "none",
             opacity: task.status === "completed" ? 0.7 : 1,
           }}
@@ -1237,44 +1570,44 @@ function TaskCard({
           {task.title}
         </h3>
         {task.completed_at && (
-          <p style={{ margin: "2px 0 0", fontSize: 11, color: "#059669" }}>
+          <p style={{ margin: "2px 0 0", fontSize: 10, color: "#059669" }}>
             أُنجزت: {formatDate(task.completed_at)}
           </p>
         )}
       </div>
 
       {/* Badges */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 99, color: sc.color, background: sc.bg }}>
+      <div className="task-card-badges">
+        <span className="task-badge" style={{ color: sc.color, background: sc.bg }}>
           {sc.label}
         </span>
-        <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 99, color: pc.color, background: pc.bg }}>
+        <span className="task-badge" style={{ color: pc.color, background: pc.bg }}>
           {pc.label}
         </span>
       </div>
 
       {/* Actions */}
-      <div onClick={(e) => e.stopPropagation()}>
+      <div className="task-card-actions" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu
           trigger={
-            <button style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", display: "grid", placeItems: "center", color: "var(--color-muted)" }}>
-              <MoreVertical size={16} />
+            <button style={{ width: 28, height: 28, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", display: "grid", placeItems: "center", color: "var(--color-muted)" }}>
+              <MoreVertical size={14} />
             </button>
           }
           items={[
             ...statusOptions.filter((s) => s !== task.status).map((s) => ({
               label: statusConfig[s].label,
-              icon: (() => { const I = statusConfig[s].icon; return <I size={14} />; })(),
+              icon: (() => { const I = statusConfig[s].icon; return <I size={13} />; })(),
               onClick: () => onUpdateStatus(task.id, s),
             })),
             {
               label: `نقل إلى ${phaseConfig[nextPhase].label}`,
-              icon: <ArrowLeftRight size={14} />,
+              icon: <ArrowLeftRight size={13} />,
               onClick: () => onUpdatePhase(task.id, nextPhase),
             },
             {
               label: "تراجع عن آخر إجراء",
-              icon: <Undo2 size={14} />,
+              icon: <Undo2 size={13} />,
               onClick: () => onUndo(task.id),
               danger: true,
             },
@@ -1284,6 +1617,7 @@ function TaskCard({
     </div>
   );
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    DETAIL VIEW (ADMIN ONLY)
@@ -1330,51 +1664,47 @@ function DetailView({
   };
 
   return (
-    <div style={{ display: "grid", gap: 20 }}>
+    <div style={{ display: "grid", gap: 16 }}>
       {/* Back */}
       <button
         onClick={onBack}
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 6,
-          padding: "8px 0",
+          gap: 5,
+          padding: "6px 0",
           border: "none",
           background: "transparent",
           color: "var(--color-primary)",
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 600,
           cursor: "pointer",
         }}
       >
-        <ArrowRight size={16} />
+        <ArrowRight size={14} />
         العودة للمهام
       </button>
 
       {/* Task Header */}
-      <div style={{ padding: 28, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div style={{ flex: 1 }}>
-            <h2 style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 800 }}>{task.title}</h2>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, padding: "4px 14px", borderRadius: 99, color: sc.color, background: sc.bg }}>{sc.label}</span>
-              <span style={{ fontSize: 12, fontWeight: 600, padding: "4px 14px", borderRadius: 99, color: pc.color, background: pc.bg }}>{pc.label}</span>
-            </div>
-            <p style={{ margin: "12px 0 0", fontSize: 13, color: "var(--color-muted)" }}>القسم: {task.section}</p>
-            {task.completed_at && (
-              <p style={{ margin: "4px 0 0", fontSize: 13, color: "#059669", fontWeight: 600 }}>
-                تاريخ الإنجاز: {formatDate(task.completed_at)}
-              </p>
-            )}
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--color-muted)" }}>تاريخ الإنشاء: {formatDate(task.created_at)}</p>
-          </div>
+      <div className="detail-card">
+        <h2 className="detail-title">{task.title}</h2>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 12px", borderRadius: 99, color: sc.color, background: sc.bg }}>{sc.label}</span>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 12px", borderRadius: 99, color: pc.color, background: pc.bg }}>{pc.label}</span>
         </div>
+        <p style={{ margin: "10px 0 0", fontSize: 12, color: "var(--color-muted)" }}>القسم: {task.section}</p>
+        {task.completed_at && (
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#059669", fontWeight: 600 }}>
+            تاريخ الإنجاز: {formatDate(task.completed_at)}
+          </p>
+        )}
+        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--color-muted)" }}>تاريخ الإنشاء: {formatDate(task.created_at)}</p>
       </div>
 
       {/* Actions */}
-      <div style={{ padding: 20, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
-        <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700 }}>الإجراءات</h3>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+      <div className="detail-card">
+        <h3 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700 }}>الإجراءات</h3>
+        <div className="detail-actions-wrap">
           {statusOptions.filter((s) => s !== task.status).map((s) => {
             const cfg = statusConfig[s];
             const Icon = cfg.icon;
@@ -1383,22 +1713,15 @@ function DetailView({
                 key={s}
                 onClick={() => onUpdateStatus(task.id, s)}
                 disabled={isLoading}
+                className="detail-action-btn"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 16px",
-                  borderRadius: 10,
                   border: `1px solid ${cfg.color}30`,
                   background: cfg.bg,
                   color: cfg.color,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
                   opacity: isLoading ? 0.5 : 1,
                 }}
               >
-                <Icon size={14} />
+                <Icon size={13} />
                 {cfg.label}
               </button>
             );
@@ -1406,106 +1729,83 @@ function DetailView({
           <button
             onClick={() => onUpdatePhase(task.id, nextPhase)}
             disabled={isLoading}
+            className="detail-action-btn"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "8px 16px",
-              borderRadius: 10,
               border: "1px solid var(--color-border)",
               background: "#f8fafc",
               color: "var(--color-text)",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
               opacity: isLoading ? 0.5 : 1,
             }}
           >
-            <ArrowLeftRight size={14} />
+            <ArrowLeftRight size={13} />
             نقل إلى {phaseConfig[nextPhase].label}
           </button>
           <button
             onClick={() => onUndo(task.id)}
             disabled={isLoading}
+            className="detail-action-btn"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "8px 16px",
-              borderRadius: 10,
               border: "1px solid #fecaca",
               background: "#fef2f2",
               color: "#dc2626",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
               opacity: isLoading ? 0.5 : 1,
             }}
           >
-            <Undo2 size={14} />
+            <Undo2 size={13} />
             تراجع
           </button>
         </div>
       </div>
 
       {/* Notes */}
-      <div style={{ padding: 20, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
-          <MessageSquareText size={18} />
+      <div className="detail-card">
+        <h3 style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+          <MessageSquareText size={16} />
           الملاحظات
         </h3>
         {task.notes && (
-          <div style={{ padding: 14, borderRadius: 10, background: "#f8fafc", border: "1px solid var(--color-border)", marginBottom: 12, fontSize: 13, lineHeight: 1.8 }}>
+          <div style={{ padding: 12, borderRadius: 10, background: "#f8fafc", border: "1px solid var(--color-border)", marginBottom: 10, fontSize: 12, lineHeight: 1.8 }}>
             {task.notes}
           </div>
         )}
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="detail-note-row">
           <textarea
             value={noteText}
             onChange={(e) => onNoteChange(e.target.value)}
             placeholder="أضف ملاحظة..."
             rows={2}
-            style={{
-              flex: 1,
-              padding: "10px 14px",
-              borderRadius: 10,
-              border: "1px solid var(--color-border)",
-              fontSize: 13,
-              resize: "vertical",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
           />
           <button
             onClick={() => onAddNote(task.id)}
             disabled={!noteText.trim() || isLoading}
             style={{
-              padding: "10px 20px",
+              padding: "10px 18px",
               borderRadius: 10,
               border: "none",
               background: "var(--color-primary)",
               color: "#fff",
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: 600,
               cursor: noteText.trim() ? "pointer" : "not-allowed",
               opacity: noteText.trim() ? 1 : 0.5,
               alignSelf: "flex-end",
               display: "flex",
               alignItems: "center",
-              gap: 6,
+              gap: 5,
+              whiteSpace: "nowrap",
             }}
           >
-            <Send size={14} />
+            <Send size={13} />
             إرسال
           </button>
         </div>
       </div>
 
       {/* History */}
-      <div style={{ padding: 20, borderRadius: 16, border: "1px solid var(--color-border)", background: "#fff", boxShadow: "var(--shadow-sm)" }}>
-        <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700 }}>سجل التغييرات</h3>
+      <div className="detail-card">
+        <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700 }}>سجل التغييرات</h3>
         {history.length === 0 ? (
-          <p style={{ color: "var(--color-muted)", fontSize: 13, textAlign: "center", padding: 20 }}>لا توجد تغييرات مسجلة بعد</p>
+          <p style={{ color: "var(--color-muted)", fontSize: 12, textAlign: "center", padding: 16 }}>لا توجد تغييرات مسجلة بعد</p>
         ) : (
           <div style={{ display: "grid", gap: 0 }}>
             {history.map((entry, i) => (
@@ -1513,27 +1813,27 @@ function DetailView({
                 key={entry.id}
                 style={{
                   display: "flex",
-                  gap: 12,
-                  padding: "12px 0",
+                  gap: 10,
+                  padding: "10px 0",
                   borderBottom: i < history.length - 1 ? "1px solid #f1f5f9" : "none",
                 }}
               >
-                <div style={{ width: 8, height: 8, borderRadius: 99, background: "var(--color-primary)", marginTop: 6, flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text)" }}>
+                <div style={{ width: 7, height: 7, borderRadius: 99, background: "var(--color-primary)", marginTop: 5, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text)" }}>
                     {actionLabels[entry.action] || entry.action}
                   </div>
                   {entry.action !== "note_added" && (
-                    <div style={{ fontSize: 12, color: "var(--color-muted)", marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: "var(--color-muted)", marginTop: 2 }}>
                       من <strong>{valueLabels(entry.from_value)}</strong> إلى <strong>{valueLabels(entry.to_value)}</strong>
                     </div>
                   )}
                   {entry.note && (
-                    <div style={{ fontSize: 12, color: "var(--color-text)", marginTop: 4, padding: "6px 10px", background: "#f8fafc", borderRadius: 8 }}>
+                    <div style={{ fontSize: 11, color: "var(--color-text)", marginTop: 4, padding: "5px 8px", background: "#f8fafc", borderRadius: 8 }}>
                       {entry.note}
                     </div>
                   )}
-                  <div style={{ fontSize: 11, color: "var(--color-muted)", marginTop: 4 }}>
+                  <div style={{ fontSize: 10, color: "var(--color-muted)", marginTop: 3 }}>
                     {entry.performed_by} • {formatDate(entry.performed_at)}
                   </div>
                 </div>
