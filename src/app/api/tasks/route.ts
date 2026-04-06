@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
-
-function getSQL() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set");
-  }
-  return neon(process.env.DATABASE_URL);
-}
+import { query } from "@/lib/db";
 
 // Ensure tables exist
 async function ensureTables() {
-  const sql = getSQL();
-  await sql`
+  await query(`
     CREATE TABLE IF NOT EXISTS pme_tasks (
       id SERIAL PRIMARY KEY,
       service_id TEXT NOT NULL,
@@ -24,8 +16,8 @@ async function ensureTables() {
       completed_at BIGINT,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )
-  `;
-  await sql`
+  `);
+  await query(`
     CREATE TABLE IF NOT EXISTS pme_task_history (
       id SERIAL PRIMARY KEY,
       task_id INTEGER NOT NULL,
@@ -36,13 +28,12 @@ async function ensureTables() {
       performed_by TEXT DEFAULT 'النظام',
       performed_at BIGINT NOT NULL
     )
-  `;
+  `);
 }
 
 // GET: list tasks with optional filters
 export async function GET(request: NextRequest) {
   try {
-    const sql = getSQL();
     await ensureTables();
 
     const { searchParams } = new URL(request.url);
@@ -54,14 +45,14 @@ export async function GET(request: NextRequest) {
 
     // Stats endpoint
     if (action === "stats") {
-      const tasks = await sql`SELECT * FROM pme_tasks ORDER BY sort_order`;
+      const tasks = await query("SELECT * FROM pme_tasks ORDER BY sort_order");
       const total = tasks.length;
-      const pending = tasks.filter((t: Record<string, unknown>) => t.status === "pending").length;
-      const inProgress = tasks.filter((t: Record<string, unknown>) => t.status === "in_progress").length;
-      const completed = tasks.filter((t: Record<string, unknown>) => t.status === "completed").length;
-      const deferred = tasks.filter((t: Record<string, unknown>) => t.status === "deferred").length;
-      const launchTotal = tasks.filter((t: Record<string, unknown>) => t.phase === "launch").length;
-      const postLaunchTotal = tasks.filter((t: Record<string, unknown>) => t.phase === "post_launch").length;
+      const pending = tasks.filter((t) => t.status === "pending").length;
+      const inProgress = tasks.filter((t) => t.status === "in_progress").length;
+      const completed = tasks.filter((t) => t.status === "completed").length;
+      const deferred = tasks.filter((t) => t.status === "deferred").length;
+      const launchTotal = tasks.filter((t) => t.phase === "launch").length;
+      const postLaunchTotal = tasks.filter((t) => t.phase === "post_launch").length;
       const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
       const sectionMap = new Map<string, { total: number; completed: number; inProgress: number; pending: number; deferred: number }>();
@@ -88,43 +79,44 @@ export async function GET(request: NextRequest) {
 
     // Sections list
     if (action === "sections") {
-      const result = await sql`SELECT DISTINCT section FROM pme_tasks ORDER BY section`;
-      return NextResponse.json(result.map((r: Record<string, unknown>) => r.section));
+      const result = await query("SELECT DISTINCT section FROM pme_tasks ORDER BY section");
+      return NextResponse.json(result.map((r) => r.section));
     }
 
     // Single task detail
     if (action === "detail") {
       const id = searchParams.get("id");
       if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
-      const tasks = await sql`SELECT * FROM pme_tasks WHERE id = ${parseInt(id)}`;
+      const tasks = await query("SELECT * FROM pme_tasks WHERE id = $1", [parseInt(id)]);
       if (tasks.length === 0) return NextResponse.json({ error: "not found" }, { status: 404 });
-      const history = await sql`SELECT * FROM pme_task_history WHERE task_id = ${parseInt(id)} ORDER BY performed_at DESC`;
+      const history = await query("SELECT * FROM pme_task_history WHERE task_id = $1 ORDER BY performed_at DESC", [parseInt(id)]);
       return NextResponse.json({ task: tasks[0], history });
     }
 
-    // Build dynamic query
-    let tasks;
-    if (status && phase && section && search) {
-      tasks = await sql`SELECT * FROM pme_tasks WHERE status = ${status} AND phase = ${phase} AND section = ${section} AND title ILIKE ${'%' + search + '%'} ORDER BY sort_order`;
-    } else if (status && phase && section) {
-      tasks = await sql`SELECT * FROM pme_tasks WHERE status = ${status} AND phase = ${phase} AND section = ${section} ORDER BY sort_order`;
-    } else if (status && phase) {
-      tasks = await sql`SELECT * FROM pme_tasks WHERE status = ${status} AND phase = ${phase} ORDER BY sort_order`;
-    } else if (status && section) {
-      tasks = await sql`SELECT * FROM pme_tasks WHERE status = ${status} AND section = ${section} ORDER BY sort_order`;
-    } else if (phase && section) {
-      tasks = await sql`SELECT * FROM pme_tasks WHERE phase = ${phase} AND section = ${section} ORDER BY sort_order`;
-    } else if (status) {
-      tasks = await sql`SELECT * FROM pme_tasks WHERE status = ${status} ORDER BY sort_order`;
-    } else if (phase) {
-      tasks = await sql`SELECT * FROM pme_tasks WHERE phase = ${phase} ORDER BY sort_order`;
-    } else if (section) {
-      tasks = await sql`SELECT * FROM pme_tasks WHERE section = ${section} ORDER BY sort_order`;
-    } else if (search) {
-      tasks = await sql`SELECT * FROM pme_tasks WHERE title ILIKE ${'%' + search + '%'} ORDER BY sort_order`;
-    } else {
-      tasks = await sql`SELECT * FROM pme_tasks ORDER BY sort_order`;
+    // Build dynamic query with parameterized queries
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+    let paramIndex = 1;
+
+    if (status) {
+      conditions.push(`status = $${paramIndex++}`);
+      params.push(status);
     }
+    if (phase) {
+      conditions.push(`phase = $${paramIndex++}`);
+      params.push(phase);
+    }
+    if (section) {
+      conditions.push(`section = $${paramIndex++}`);
+      params.push(section);
+    }
+    if (search) {
+      conditions.push(`title ILIKE $${paramIndex++}`);
+      params.push(`%${search}%`);
+    }
+
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const tasks = await query(`SELECT * FROM pme_tasks ${where} ORDER BY sort_order`, params);
 
     return NextResponse.json(tasks);
   } catch (error: unknown) {
@@ -137,7 +129,6 @@ export async function GET(request: NextRequest) {
 // POST: update task status/phase/note
 export async function POST(request: NextRequest) {
   try {
-    const sql = getSQL();
     await ensureTables();
 
     const body = await request.json();
@@ -145,61 +136,61 @@ export async function POST(request: NextRequest) {
 
     if (action === "updateStatus") {
       const { taskId, status } = body;
-      const tasks = await sql`SELECT * FROM pme_tasks WHERE id = ${taskId}`;
+      const tasks = await query("SELECT * FROM pme_tasks WHERE id = $1", [taskId]);
       if (tasks.length === 0) return NextResponse.json({ error: "not found" }, { status: 404 });
       const task = tasks[0];
       const oldStatus = task.status;
       const now = Date.now();
       const completedAt = status === "completed" ? now : null;
 
-      await sql`UPDATE pme_tasks SET status = ${status}, completed_at = ${completedAt} WHERE id = ${taskId}`;
-      await sql`INSERT INTO pme_task_history (task_id, action, from_value, to_value, performed_by, performed_at) VALUES (${taskId}, 'status_change', ${oldStatus as string}, ${status}, ${body.performedBy || 'مستخدم'}, ${now})`;
+      await query("UPDATE pme_tasks SET status = $1, completed_at = $2 WHERE id = $3", [status, completedAt, taskId]);
+      await query("INSERT INTO pme_task_history (task_id, action, from_value, to_value, performed_by, performed_at) VALUES ($1, $2, $3, $4, $5, $6)", [taskId, "status_change", oldStatus, status, body.performedBy || "مستخدم", now]);
 
       return NextResponse.json({ ...task, status, completed_at: completedAt });
     }
 
     if (action === "updatePhase") {
       const { taskId, phase } = body;
-      const tasks = await sql`SELECT * FROM pme_tasks WHERE id = ${taskId}`;
+      const tasks = await query("SELECT * FROM pme_tasks WHERE id = $1", [taskId]);
       if (tasks.length === 0) return NextResponse.json({ error: "not found" }, { status: 404 });
       const task = tasks[0];
       const oldPhase = task.phase;
       const now = Date.now();
 
-      await sql`UPDATE pme_tasks SET phase = ${phase} WHERE id = ${taskId}`;
-      await sql`INSERT INTO pme_task_history (task_id, action, from_value, to_value, performed_by, performed_at) VALUES (${taskId}, 'phase_change', ${oldPhase as string}, ${phase}, ${body.performedBy || 'مستخدم'}, ${now})`;
+      await query("UPDATE pme_tasks SET phase = $1 WHERE id = $2", [phase, taskId]);
+      await query("INSERT INTO pme_task_history (task_id, action, from_value, to_value, performed_by, performed_at) VALUES ($1, $2, $3, $4, $5, $6)", [taskId, "phase_change", oldPhase, phase, body.performedBy || "مستخدم", now]);
 
       return NextResponse.json({ ...task, phase });
     }
 
     if (action === "addNote") {
       const { taskId, note } = body;
-      const tasks = await sql`SELECT * FROM pme_tasks WHERE id = ${taskId}`;
+      const tasks = await query("SELECT * FROM pme_tasks WHERE id = $1", [taskId]);
       if (tasks.length === 0) return NextResponse.json({ error: "not found" }, { status: 404 });
       const task = tasks[0];
       const now = Date.now();
 
-      await sql`UPDATE pme_tasks SET notes = ${note} WHERE id = ${taskId}`;
-      await sql`INSERT INTO pme_task_history (task_id, action, from_value, to_value, note, performed_by, performed_at) VALUES (${taskId}, 'note_added', ${null}, ${(note as string).substring(0, 100)}, ${note}, ${body.performedBy || 'مستخدم'}, ${now})`;
+      await query("UPDATE pme_tasks SET notes = $1 WHERE id = $2", [note, taskId]);
+      await query("INSERT INTO pme_task_history (task_id, action, from_value, to_value, note, performed_by, performed_at) VALUES ($1, $2, $3, $4, $5, $6, $7)", [taskId, "note_added", null, (note as string).substring(0, 100), note, body.performedBy || "مستخدم", now]);
 
       return NextResponse.json({ ...task, notes: note });
     }
 
     if (action === "undo") {
       const { taskId } = body;
-      const history = await sql`SELECT * FROM pme_task_history WHERE task_id = ${taskId} ORDER BY performed_at DESC LIMIT 1`;
+      const history = await query("SELECT * FROM pme_task_history WHERE task_id = $1 ORDER BY performed_at DESC LIMIT 1", [taskId]);
       if (history.length === 0) return NextResponse.json({ error: "لا يوجد إجراء للتراجع عنه" }, { status: 400 });
 
       const lastAction = history[0];
       if (lastAction.action === "status_change" && lastAction.from_value) {
         const completedAt = lastAction.from_value === "completed" ? Date.now() : null;
-        await sql`UPDATE pme_tasks SET status = ${lastAction.from_value as string}, completed_at = ${completedAt} WHERE id = ${taskId}`;
+        await query("UPDATE pme_tasks SET status = $1, completed_at = $2 WHERE id = $3", [lastAction.from_value, completedAt, taskId]);
       } else if (lastAction.action === "phase_change" && lastAction.from_value) {
-        await sql`UPDATE pme_tasks SET phase = ${lastAction.from_value as string} WHERE id = ${taskId}`;
+        await query("UPDATE pme_tasks SET phase = $1 WHERE id = $2", [lastAction.from_value, taskId]);
       }
-      await sql`DELETE FROM pme_task_history WHERE id = ${lastAction.id as number}`;
+      await query("DELETE FROM pme_task_history WHERE id = $1", [lastAction.id]);
 
-      const updated = await sql`SELECT * FROM pme_tasks WHERE id = ${taskId}`;
+      const updated = await query("SELECT * FROM pme_tasks WHERE id = $1", [taskId]);
       return NextResponse.json(updated[0]);
     }
 

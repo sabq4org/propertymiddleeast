@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { query } from "@/lib/db";
 import { servicesData } from "@/lib/services-data";
-
-function getSQL() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set");
-  }
-  return neon(process.env.DATABASE_URL);
-}
 
 // The original selections from Ahmad Bedaewi's submission - post-launch services
 const postLaunchServiceNames = new Set([
@@ -30,10 +23,8 @@ const notSelectedNames = new Set([
 
 export async function POST() {
   try {
-    const sql = getSQL();
-
     // Create tables
-    await sql`
+    await query(`
       CREATE TABLE IF NOT EXISTS pme_tasks (
         id SERIAL PRIMARY KEY,
         service_id TEXT NOT NULL,
@@ -46,8 +37,8 @@ export async function POST() {
         completed_at BIGINT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
-    `;
-    await sql`
+    `);
+    await query(`
       CREATE TABLE IF NOT EXISTS pme_task_history (
         id SERIAL PRIMARY KEY,
         task_id INTEGER NOT NULL,
@@ -58,18 +49,17 @@ export async function POST() {
         performed_by TEXT DEFAULT 'النظام',
         performed_at BIGINT NOT NULL
       )
-    `;
+    `);
 
     // Check if already seeded
-    const existing = await sql`SELECT COUNT(*)::int as count FROM pme_tasks`;
+    const existing = await query("SELECT COUNT(*)::int as count FROM pme_tasks");
     const existingCount = Number(existing[0].count);
     if (existingCount > 0) {
       return NextResponse.json({ message: `البيانات موجودة مسبقاً (${existingCount} مهمة)`, count: existingCount });
     }
 
     let sortOrder = 0;
-    const values: string[] = [];
-    
+
     for (const section of servicesData) {
       for (const sub of section.subsections) {
         for (const service of sub.services) {
@@ -78,11 +68,10 @@ export async function POST() {
           const phase = postLaunchServiceNames.has(service.name) ? "post_launch" : "launch";
           const sectionTitle = `${section.title} — ${sub.title}`;
 
-          await sql`
-            INSERT INTO pme_tasks (service_id, title, section, phase, status, sort_order)
-            VALUES (${service.id}, ${service.name}, ${sectionTitle}, ${phase}, 'pending', ${sortOrder})
-          `;
-          values.push(service.name);
+          await query(
+            "INSERT INTO pme_tasks (service_id, title, section, phase, status, sort_order) VALUES ($1, $2, $3, $4, $5, $6)",
+            [service.id, service.name, sectionTitle, phase, "pending", sortOrder]
+          );
           sortOrder++;
         }
       }
