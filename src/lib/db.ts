@@ -20,17 +20,32 @@ function getPool(): Pool {
   if (!pool) {
     pool = new Pool({
       connectionString: getConnectionString(),
-      ssl: { rejectUnauthorized: false },
-      max: 10,
+      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+      max: 5,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      connectionTimeoutMillis: 15000,
+    });
+
+    // Log connection errors for debugging
+    pool.on("error", (err) => {
+      console.error("Unexpected pool error:", err.message);
     });
   }
   return pool;
 }
 
 export async function query(text: string, params?: unknown[]) {
-  const client = getPool();
-  const result = await client.query(text, params);
-  return result.rows;
+  const p = getPool();
+  try {
+    const result = await p.query(text, params);
+    return result.rows;
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    // Provide more detail on connection errors
+    if (error instanceof AggregateError) {
+      const details = error.errors?.map((e: Error) => e.message).join("; ") ?? "no details";
+      throw new Error(`Database connection failed: ${details}`);
+    }
+    throw new Error(`Database query failed: ${msg}`);
+  }
 }
