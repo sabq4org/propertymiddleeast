@@ -22,7 +22,6 @@ export async function GET() {
     env: process.env.NODE_ENV,
   };
 
-  // Test database connection
   if (dbUrl) {
     try {
       const result = await query("SELECT 1 as test");

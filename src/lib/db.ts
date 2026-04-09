@@ -1,40 +1,16 @@
-import { Pool } from "pg";
+import { neon } from "@neondatabase/serverless";
 
-function getPool(): Pool {
-  let connectionString = process.env.DATABASE_URL;
-  if (!connectionString) throw new Error("DATABASE_URL is not set");
-
-  // pg v8.20+ treats sslmode=require as verify-full by default
-  // Add uselibpqcompat=true to use standard libpq behavior (no cert verification)
-  try {
-    const url = new URL(connectionString);
-    url.searchParams.set("uselibpqcompat", "true");
-    connectionString = url.toString();
-  } catch {
-    // If URL parsing fails, append manually
-    const sep = connectionString.includes("?") ? "&" : "?";
-    connectionString = `${connectionString}${sep}uselibpqcompat=true`;
-  }
-
-  return new Pool({
-    connectionString,
-    max: 5,
-    connectionTimeoutMillis: 10000,
-    idleTimeoutMillis: 30000,
-  });
+function getConnectionString(): string {
+  const raw = process.env.DATABASE_URL;
+  if (!raw) throw new Error("DATABASE_URL is not set");
+  return raw;
 }
 
-let pool: Pool | null = null;
-
-function getOrCreatePool(): Pool {
-  if (!pool) {
-    pool = getPool();
-  }
-  return pool;
-}
+const sql = neon(getConnectionString());
 
 export async function query(text: string, params?: unknown[]) {
-  const p = getOrCreatePool();
-  const result = await p.query(text, params);
-  return result.rows;
+  if (params && params.length > 0) {
+    return (await sql.query(text, params as (string | number | boolean | null | undefined)[])) as Record<string, unknown>[];
+  }
+  return (await sql.query(text)) as Record<string, unknown>[];
 }
