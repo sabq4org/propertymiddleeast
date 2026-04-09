@@ -1,40 +1,40 @@
-import { neon, neonConfig } from "@neondatabase/serverless";
+import { Pool } from "pg";
 
-function getConnectionString(): string {
-  const raw = process.env.DATABASE_URL;
-  if (!raw) throw new Error("DATABASE_URL is not set");
+function getPool(): Pool {
+  let connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("DATABASE_URL is not set");
 
+  // pg v8.20+ treats sslmode=require as verify-full by default
+  // Add uselibpqcompat=true to use standard libpq behavior (no cert verification)
   try {
-    const url = new URL(raw);
-    // Remove channel_binding parameter
-    url.searchParams.delete("channel_binding");
-    // Switch from pooler to direct endpoint for HTTP queries
-    // pooler: ep-xxx-pooler.c-5.xxx -> direct: ep-xxx.c-5.xxx
-    url.hostname = url.hostname.replace("-pooler.", ".");
-    return url.toString();
+    const url = new URL(connectionString);
+    url.searchParams.set("uselibpqcompat", "true");
+    connectionString = url.toString();
   } catch {
-    return raw
-      .replace(/[&?]channel_binding=[^&]*/g, "")
-      .replace("-pooler.", ".");
+    // If URL parsing fails, append manually
+    const sep = connectionString.includes("?") ? "&" : "?";
+    connectionString = `${connectionString}${sep}uselibpqcompat=true`;
   }
+
+  return new Pool({
+    connectionString,
+    max: 5,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+  });
 }
 
-// Set the fetch endpoint to use the direct host (not pooler)
-neonConfig.fetchEndpoint = (host: string) => {
-  // Ensure we use the direct endpoint
-  const directHost = host.replace("-pooler.", ".");
-  return `https://${directHost}/sql`;
-};
+let pool: Pool | null = null;
 
-const connectionString = getConnectionString();
-const sql = neon(connectionString);
+function getOrCreatePool(): Pool {
+  if (!pool) {
+    pool = getPool();
+  }
+  return pool;
+}
 
 export async function query(text: string, params?: unknown[]) {
-  if (params && params.length > 0) {
-    return (await sql.query(text, params as (string | number | boolean | null | undefined)[])) as Record<
-      string,
-      unknown
-    >[];
-  }
-  return (await sql.query(text)) as Record<string, unknown>[];
+  const p = getOrCreatePool();
+  const result = await p.query(text, params);
+  return result.rows;
 }
