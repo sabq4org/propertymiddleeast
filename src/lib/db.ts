@@ -1,4 +1,13 @@
-import { Pool } from "pg";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
+
+// Configure WebSocket for Node.js environments
+neonConfig.webSocketConstructor = ws;
+
+// Use fetch via Pool for better performance in serverless
+neonConfig.poolQueryViaFetch = true;
+// Use secure WebSocket (port 443) - works even when port 5432 is blocked
+neonConfig.useSecureWebSocket = true;
 
 function getConnectionString(): string {
   const raw = process.env.DATABASE_URL;
@@ -18,34 +27,13 @@ let pool: Pool | null = null;
 
 function getPool(): Pool {
   if (!pool) {
-    pool = new Pool({
-      connectionString: getConnectionString(),
-      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-      max: 5,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 15000,
-    });
-
-    // Log connection errors for debugging
-    pool.on("error", (err) => {
-      console.error("Unexpected pool error:", err.message);
-    });
+    pool = new Pool({ connectionString: getConnectionString() });
   }
   return pool;
 }
 
 export async function query(text: string, params?: unknown[]) {
   const p = getPool();
-  try {
-    const result = await p.query(text, params);
-    return result.rows;
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
-    // Provide more detail on connection errors
-    if (error instanceof AggregateError) {
-      const details = error.errors?.map((e: Error) => e.message).join("; ") ?? "no details";
-      throw new Error(`Database connection failed: ${details}`);
-    }
-    throw new Error(`Database query failed: ${msg}`);
-  }
+  const result = await p.query(text, params);
+  return result.rows;
 }
