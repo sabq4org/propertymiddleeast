@@ -1,39 +1,40 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
-
-// Configure WebSocket for Node.js environments
-neonConfig.webSocketConstructor = ws;
-
-// Use fetch via Pool for better performance in serverless
-neonConfig.poolQueryViaFetch = true;
-// Use secure WebSocket (port 443) - works even when port 5432 is blocked
-neonConfig.useSecureWebSocket = true;
+import { neon, neonConfig } from "@neondatabase/serverless";
 
 function getConnectionString(): string {
   const raw = process.env.DATABASE_URL;
   if (!raw) throw new Error("DATABASE_URL is not set");
 
-  // Remove channel_binding parameter which causes issues in some environments
   try {
     const url = new URL(raw);
+    // Remove channel_binding parameter
     url.searchParams.delete("channel_binding");
+    // Switch from pooler to direct endpoint for HTTP queries
+    // pooler: ep-xxx-pooler.c-5.xxx -> direct: ep-xxx.c-5.xxx
+    url.hostname = url.hostname.replace("-pooler.", ".");
     return url.toString();
   } catch {
-    return raw.replace(/[&?]channel_binding=[^&]*/g, "");
+    return raw
+      .replace(/[&?]channel_binding=[^&]*/g, "")
+      .replace("-pooler.", ".");
   }
 }
 
-let pool: Pool | null = null;
+// Set the fetch endpoint to use the direct host (not pooler)
+neonConfig.fetchEndpoint = (host: string) => {
+  // Ensure we use the direct endpoint
+  const directHost = host.replace("-pooler.", ".");
+  return `https://${directHost}/sql`;
+};
 
-function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({ connectionString: getConnectionString() });
-  }
-  return pool;
-}
+const connectionString = getConnectionString();
+const sql = neon(connectionString);
 
 export async function query(text: string, params?: unknown[]) {
-  const p = getPool();
-  const result = await p.query(text, params);
-  return result.rows;
+  if (params && params.length > 0) {
+    return (await sql.query(text, params as (string | number | boolean | null | undefined)[])) as Record<
+      string,
+      unknown
+    >[];
+  }
+  return (await sql.query(text)) as Record<string, unknown>[];
 }
