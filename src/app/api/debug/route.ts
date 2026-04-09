@@ -30,7 +30,7 @@ export async function GET() {
 
       try {
         const count = await query("SELECT COUNT(*)::int as count FROM pme_tasks");
-        info.taskCount = count[0].count;
+        info.taskCount = (count[0] as Record<string, unknown>).count;
       } catch (e: unknown) {
         info.taskCountError = e instanceof Error ? e.message : String(e);
       }

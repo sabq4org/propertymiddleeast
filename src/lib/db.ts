@@ -1,20 +1,10 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
+import { neon } from "@neondatabase/serverless";
 
-// Use WebSocket for connection instead of HTTP fetch
-neonConfig.webSocketConstructor = ws;
-
-let pool: Pool | null = null;
-
-export function getPool() {
-  if (!pool) {
-    pool = new Pool({ connectionString: process.env.DATABASE_URL! });
-  }
-  return pool;
-}
+const sql = neon(process.env.DATABASE_URL!);
 
 export async function query(text: string, params?: unknown[]) {
-  const pool = getPool();
-  const result = await pool.query(text, params);
-  return result.rows;
+  if (params && params.length > 0) {
+    return await sql.query(text, params as (string | number | boolean | null | undefined)[]) as Record<string, unknown>[];
+  }
+  return await sql.query(text) as Record<string, unknown>[];
 }
